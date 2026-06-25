@@ -5,9 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
-	"io"
 	"strings"
 )
 
@@ -28,7 +29,7 @@ func (o *OpenAITranscriber) Transcribe(ctx context.Context, audio io.Reader) (st
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
 
-	part, err := writer.CreateFormFile("file", "audio.mp3")
+	part, err := writer.CreateFormFile("file", "recording.mp3")
 	if err != nil {
 		return "", err
 	}
@@ -83,6 +84,8 @@ func (o *OpenAITranscriber) Transcribe(ctx context.Context, audio io.Reader) (st
 	if err := json.Unmarshal(respBody, &result); err != nil {
 		return "", err
 	}
+
+	slog.Info("OpenAITranscriber: transcribed audio")
 
 	return result.Text, nil
 }

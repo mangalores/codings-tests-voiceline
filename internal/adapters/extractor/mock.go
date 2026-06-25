@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/mangalores/case-studies-voiceline/internal/app"
@@ -27,6 +28,8 @@ func (m *MockExtractor) Extract(ctx context.Context, transcription string) (app.
 	if err := json.Unmarshal(content, &data); err != nil {
 		return app.ExtractedData{}, fmt.Errorf("decode mock extraction: %w", err)
 	}
+
+	slog.Info("MockExtractor extracted data")
 
 	return data, nil
 }

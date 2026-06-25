@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 )
 
@@ -28,6 +29,8 @@ func (m *MockTranscriber) Transcribe(ctx context.Context, audio io.Reader) (stri
 	if err != nil {
 		return "", fmt.Errorf("read mock transcription: %w", err)
 	}
+
+	slog.Info("MockTranscriber: transcribed audio")
 
 	return string(content), nil
 }

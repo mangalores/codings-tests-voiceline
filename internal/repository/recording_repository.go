@@ -37,7 +37,7 @@ func (r *RecordingRepository) StoreRecording(file []byte) (string, error) {
 		return "", err
 	}
 
-	if err := os.WriteFile(filepath.Join(folderPath, "recording.bin"), file, 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(folderPath, "recording.mp3"), file, 0o644); err != nil {
 		_ = os.RemoveAll(folderPath)
 		return "", err
 	}
@@ -60,7 +60,7 @@ func (r *RecordingRepository) OpenRecording(id string) (io.ReadCloser, error) {
 		return nil, err
 	}
 
-	return os.Open(filepath.Join(folderPath, "recording.bin"))
+	return os.Open(filepath.Join(folderPath, "recording.mp3"))
 }
 
 func (r *RecordingRepository) SaveExtraction(id string, extraction []byte) error {

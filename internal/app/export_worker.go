@@ -35,9 +35,9 @@ func (w *ExportWorker) Run(ctx context.Context) {
 			}
 
 			if err := w.handleCommand(ctx, command); err != nil {
-				slog.Error("export recording", "worker", "ExportWorker", "id", command.ID, "error", err)
+				slog.Error("FAILED export recording", "worker", "ExportWorker", "id", command.ID, "error", err)
 				if saveErr := w.recordings.SaveError(command.ID, "ExportWorker", err.Error()); saveErr != nil {
-					slog.Error("persist worker error", "worker", "ExportWorker", "id", command.ID, "error", saveErr)
+					slog.Error("FAILED persist worker error", "worker", "ExportWorker", "id", command.ID, "error", saveErr)
 				}
 			}
 		}
@@ -54,7 +54,7 @@ func (w *ExportWorker) handleCommand(ctx context.Context, command ExportCommand)
 		return err
 	}
 
-	slog.Info("export recording", "worker", "ExportWorker", "id", command.ID, "status", "success")
+	slog.Info("SUCCESS export recording", "worker", "ExportWorker", "id", command.ID, "status", "success")
 
 	return nil
 }

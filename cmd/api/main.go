@@ -12,14 +12,15 @@ import (
 )
 
 func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	cfg, err := config.Load()
 	if err != nil {
 		slog.Error("load config", "error", err)
 		os.Exit(1)
 	}
-
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
+	slog.Debug("loaded config", "config", cfg)
 
 	application, err := bootstrap.BuildApplication(cfg)
 	if err != nil {

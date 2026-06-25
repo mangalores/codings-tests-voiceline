@@ -17,7 +17,7 @@ func NewRouter(uploader *app.UploadService) *gin.Engine {
 	recordingHandler := handlers.NewRecordingHandler(uploader)
 	router.POST("/recordings", recordingHandler.Create)
 
-	router.GET("/healthz", func(c *gin.Context) {
+	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
