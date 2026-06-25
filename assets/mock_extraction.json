@@ -1,0 +1,19 @@
+{
+  "summary": "Customer is interested in moving forward and requested a product demo.",
+  "participants": [
+    "Holger",
+    "Harry",
+    "Sarah"
+  ],
+  "decisions": [
+    "Budget has been approved.",
+    "Salesforce integration is required."
+  ],
+  "actionItems": [
+    {
+      "owner": "Holger",
+      "task": "Schedule follow-up meeting with Harry and Sarah",
+      "due": "next week"
+    }
+  ]
+}
