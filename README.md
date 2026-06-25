@@ -12,15 +12,18 @@ A `.env.dist` is provided as template for adding required API Keys or settings.
 ## File Storage
 Generated artifacts are written to:
 
+```text
 storage/<recording-id>/
     recording.mp3
     transcription.md
     extracted.json
+``` 
 
 ## Build
 
 Go 1.26.4 was used for implementation
-From the project root:
+
+To build execute from the project root:
 
 ```bash
     go mod vendor
