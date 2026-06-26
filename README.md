@@ -29,7 +29,6 @@ Requires Go 1.24 or newer.
 To build execute from the project root:
 
 ```bash
-    go mod vendor
     go build -o api ./cmd/api
 ```
 
