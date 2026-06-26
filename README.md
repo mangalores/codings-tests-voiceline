@@ -49,7 +49,7 @@ curl -X POST http://localhost:8080/recordings \
 
 ### With OpenAI Transcriber,Extractor & Webhook Export
 
-Set the exporter to webhook and point it at your endpoint:
+Set the exporter to webhook and point it at your endpoint (in my case I used webhook.site):
 
 ```text
 TRANSCRIBER=openai
@@ -103,7 +103,9 @@ Recording artifacts are stored on the local filesystem. This avoids database set
 
 ### 2. In-memory channels
 
-Background workers communicate through Go channels to model asynchronous processing. In production, durable queues such as SQS, Pub/Sub, or RabbitMQ would provide persistence, retries, and recovery. This choice keeps the API responsive while transcription and extraction are in progress. The tradeoff is limited throughput in this proof of concept.
+Background workers communicate through Go channels to model asynchronous processing. In production, durable queues such as SQS, Pub/Sub, or RabbitMQ would provide persistence, retries, and recovery. 
+
+This choice keeps the API responsive while transcription and extraction are in progress as the LLM api calls + export may take time to process. The tradeoff is limited throughput and only viable in this proof of concept.
 
 ### 3. Adapter-based integrations
 
@@ -111,8 +113,8 @@ Speech-to-text, extraction, and export are abstracted behind interfaces. Mock im
 
 ### 4. Mock fixtures
 
-Mock adapters load deterministic responses from the assets directory. This allows the application flow to be exercised without external dependencies or API keys.
+Mock adapters load deterministic responses from the assets directory. This allows the application flow to be exercised without external dependencies or API keys. It allowed ensuring complete processing flow independent of the implementation states.
 
 ### 5. Error handling of workers
 
-Asynchronous processing cannot return errors to the initial upload request. Failed processing steps create an `error.json` artifact and are also reported in the logs.
+Asynchronous processing cannot return errors to the initial upload request. Failed processing steps create an `error.json` artifact and are also reported in the logs. This could be later served via a status endpoint.
