@@ -17,11 +17,11 @@ type GoogleSheetExporter struct {
 	sheetRange          string
 }
 
-func NewGoogleSheetExporter(credentialsFilePath, sheetID, sheetRange string) *GoogleSheetExporter {
+func NewGoogleSheetExporter(cfg GoogleConfig) *GoogleSheetExporter {
 	return &GoogleSheetExporter{
-		credentialsFilePath: credentialsFilePath,
-		sheetID:             sheetID,
-		sheetRange:          sheetRange,
+		credentialsFilePath: cfg.CredentialsFilePath,
+		sheetID:             cfg.SheetID,
+		sheetRange:          cfg.SheetRange,
 	}
 }
 

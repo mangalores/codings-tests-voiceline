@@ -16,9 +16,8 @@ type OpenAITranscriber struct {
 	apiKey string
 }
 
-func NewOpenAITranscriber(apiKey string) *OpenAITranscriber {
-
-	return &OpenAITranscriber{apiKey: apiKey}
+func NewOpenAITranscriber(cfg OpenAIConfig) *OpenAITranscriber {
+	return &OpenAITranscriber{apiKey: cfg.APIKey}
 }
 
 func (o *OpenAITranscriber) Transcribe(ctx context.Context, audio io.Reader) (string, error) {

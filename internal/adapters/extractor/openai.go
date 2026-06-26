@@ -56,8 +56,8 @@ type OpenAIExtractor struct {
 	APIKey string
 }
 
-func NewOpenAIExtractor(apiKey string) *OpenAIExtractor {
-	return &OpenAIExtractor{APIKey: apiKey}
+func NewOpenAIExtractor(cfg OpenAIConfig) *OpenAIExtractor {
+	return &OpenAIExtractor{APIKey: cfg.APIKey}
 }
 
 func (e *OpenAIExtractor) Extract(ctx context.Context, transcription string) (app.ExtractedData, error) {

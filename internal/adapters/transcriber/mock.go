@@ -6,13 +6,15 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"strings"
 )
 
 type MockTranscriber struct {
 	transcriptionPath string
 }
 
-func NewMockTranscriber(transcriptionPath string) (*MockTranscriber, error) {
+func NewMockTranscriber(cfg MockConfig) (*MockTranscriber, error) {
+	transcriptionPath := strings.TrimSpace(cfg.TranscriptionPath)
 	if transcriptionPath == "" {
 		transcriptionPath = "assets/mock_transcription.md"
 	}

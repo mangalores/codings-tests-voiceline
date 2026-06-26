@@ -14,7 +14,12 @@ type MockExtractor struct {
 	extractionPath string
 }
 
-func NewMockExtractor(extractionPath string) *MockExtractor {
+func NewMockExtractor(cfg MockConfig) *MockExtractor {
+	extractionPath := cfg.ExtractionPath
+	if extractionPath == "" {
+		extractionPath = "assets/mock_extraction.json"
+	}
+
 	return &MockExtractor{extractionPath: extractionPath}
 }
 

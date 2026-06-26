@@ -16,8 +16,8 @@ type WebhookExporter struct {
 	webhookURL string
 }
 
-func NewWebhookExporter(webhookURL string) *WebhookExporter {
-	return &WebhookExporter{webhookURL: webhookURL}
+func NewWebhookExporter(cfg WebhookConfig) *WebhookExporter {
+	return &WebhookExporter{webhookURL: cfg.ExportURL}
 }
 
 func (w *WebhookExporter) Export(ctx context.Context, data app.ExtractedData) error {

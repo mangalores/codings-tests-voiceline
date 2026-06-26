@@ -74,14 +74,14 @@ func buildTranscriber(cfg *config.AppConfig) (app.Transcriber, error) {
 			return nil, err
 		}
 
-		return transcriberadapter.NewOpenAITranscriber(openAIConfig.APIKey), nil
+		return transcriberadapter.NewOpenAITranscriber(openAIConfig), nil
 	default:
 		mockConfig, err := transcriberadapter.LoadMockConfig()
 		if err != nil {
 			return nil, err
 		}
 
-		return transcriberadapter.NewMockTranscriber(mockConfig.TranscriptionPath)
+		return transcriberadapter.NewMockTranscriber(mockConfig)
 	}
 }
 
@@ -93,14 +93,14 @@ func buildExtractor(cfg *config.AppConfig) (app.Extractor, error) {
 			return nil, err
 		}
 
-		return extractoradapter.NewOpenAIExtractor(openAIConfig.APIKey), nil
+		return extractoradapter.NewOpenAIExtractor(openAIConfig), nil
 	default:
 		mockConfig, err := extractoradapter.LoadMockConfig()
 		if err != nil {
 			return nil, err
 		}
 
-		return extractoradapter.NewMockExtractor(mockConfig.ExtractionPath), nil
+		return extractoradapter.NewMockExtractor(mockConfig), nil
 	}
 }
 
@@ -112,18 +112,14 @@ func buildExporter(cfg *config.AppConfig) (app.Exporter, error) {
 			return nil, err
 		}
 
-		return exporteradapter.NewWebhookExporter(webhookConfig.ExportURL), nil
+		return exporteradapter.NewWebhookExporter(webhookConfig), nil
 	case "googlesheets":
 		googleConfig, err := exporteradapter.LoadGoogleConfig()
 		if err != nil {
 			return nil, err
 		}
 
-		return exporteradapter.NewGoogleSheetExporter(
-			googleConfig.CredentialsFilePath,
-			googleConfig.SheetID,
-			googleConfig.SheetRange,
-		), nil
+		return exporteradapter.NewGoogleSheetExporter(googleConfig), nil
 	default:
 		return exporteradapter.NewMockExporter(), nil
 	}

@@ -77,6 +77,16 @@ The webhook receives a `POST` request with the extracted data as JSON:
 }
 ```
 
+### Google Sheets (Stretch goal)
+
+Implementation of google sheets did not happen within timebox. But now works with a service account whose email has access to the google sheet defined by sheetID
+
+```text
+EXPORTER=googlesheets
+
+GOOGLE_CREDENTIALS_FILE=./credentials/<YOUR_SERVICE_ACCOUNT_CREDENTIALS>.json
+GOOGLE_SHEET_ID=<YOUR_GOOGLE_SHEET_ID>
+```
 
 ## Supported Adapters
 
