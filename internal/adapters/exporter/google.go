@@ -66,6 +66,7 @@ func (g *GoogleSheetExporter) validate() error {
 
 func buildSheetRows(data app.ExtractedData) [][]interface{} {
 	rows := [][]interface{}{
+		[]interface{}{"", "", "", "", "", ""},
 		{"Summary", data.Summary, "", "", "", ""},
 	}
 

@@ -12,10 +12,6 @@ type MockTranscriber struct {
 	transcriptionPath string
 }
 
-type MockConfig struct {
-	TranscriptionPath string `envconfig:"TRANSCRIPTION_PATH" default:"assets/mock_transcription.md"`
-}
-
 func NewMockTranscriber(transcriptionPath string) (*MockTranscriber, error) {
 	if transcriptionPath == "" {
 		transcriptionPath = "assets/mock_transcription.md"

@@ -94,7 +94,7 @@ The ability to have various adapters for the different processing steps is repre
 - mock
 - webhook
 
-- googlesheet (exists as option, but implementation was not finished due to time constraints)
+- googlesheet (was implemented as stretch goal outside the time box)
 
 ## File Storage
 Generated artifacts are written to:

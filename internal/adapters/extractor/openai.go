@@ -15,6 +15,43 @@ import (
 
 const openAIResponsesURL = "https://api.openai.com/v1/responses"
 
+const openAISystemPrompt = `You analyze meeting transcripts.
+Tasks:
+1. Create a concise summary.
+2. Extract all participants explicitly mentioned.
+3. Extract decisions made during the meeting.
+4. Extract action items from the transcript concerning future tasks (e.g. meetings). Action items are tasks when a person is responsible for doing something, even if the sentence does not use the words "action item".
+
+Rules:
+- Do not invent names.
+- If a due date is not mentioned, leave it empty.
+- If a participant is not mentioned, leave it empty.
+`
+
+const openAIUserPrompt = "Create a concise summary, extract participant names and action items from this transcript:\n\n%s"
+
+type analysisRequest struct {
+	Model string            `json:"model"`
+	Input []analysisMessage `json:"input"`
+	Text  analysisText      `json:"text"`
+}
+
+type analysisMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type analysisText struct {
+	Format analysisFormat `json:"format"`
+}
+
+type analysisFormat struct {
+	Type   string         `json:"type"`
+	Name   string         `json:"name"`
+	Strict bool           `json:"strict"`
+	Schema map[string]any `json:"schema"`
+}
+
 type OpenAIExtractor struct {
 	APIKey string
 }
@@ -28,10 +65,7 @@ func (e *OpenAIExtractor) Extract(ctx context.Context, transcription string) (ap
 		return app.ExtractedData{}, fmt.Errorf("openai api key is required")
 	}
 
-	payload, err := buildAnalysisRequest(transcription)
-	if err != nil {
-		return app.ExtractedData{}, err
-	}
+	payload := buildAnalysisRequest(transcription)
 
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -92,82 +126,74 @@ func (e *OpenAIExtractor) Extract(ctx context.Context, transcription string) (ap
 	return result, nil
 
 }
-
-func buildAnalysisRequest(transcript string) (map[string]any, error) {
-	return map[string]any{
-		"model": "gpt-4.1-mini",
-		"input": []map[string]any{
+func buildAnalysisRequest(transcript string) analysisRequest {
+	return analysisRequest{
+		Model: "gpt-4.1-mini",
+		Input: []analysisMessage{
 			{
-				"role": "system",
-				"content": `You analyze meeting transcripts.
-							Tasks:
-							1. Create a concise summary.
-							2. Extract all participants explicitly mentioned.
-							3. Extract decisions made during the meeting.
-							4. Extract action items from the transcript concerning future tasks (e.g. meetings). Action items are tasks when a person is responsible for doing something, even if the sentence does not use the words "action item".
-
-							Rules:
-							- Do not invent names.
-							- If a due date is not mentioned, leave it empty.
-							- If a participant is not mentioned, leave it empty.
-							`,
+				Role:    "system",
+				Content: openAISystemPrompt,
 			},
 			{
-				"role":    "user",
-				"content": "Create a concise summary, extract participant names and action items from this transcript:\n\n" + transcript,
+				Role:    "user",
+				Content: fmt.Sprintf(openAIUserPrompt, transcript),
 			},
 		},
-		"text": map[string]any{
-			"format": map[string]any{
-				"type":   "json_schema",
-				"name":   "meeting_analysis",
-				"strict": true,
-				"schema": map[string]any{
+		Text: analysisText{
+			Format: analysisFormat{
+				Type:   "json_schema",
+				Name:   "meeting_analysis",
+				Strict: true,
+				Schema: meetingAnalysisSchema(),
+			},
+		},
+	}
+}
+
+func meetingAnalysisSchema() map[string]any {
+	return map[string]any{
+		"type":                 "object",
+		"additionalProperties": false,
+		"required":             []string{"summary", "participants", "decisions", "actionItems"},
+		"properties": map[string]any{
+			"summary": map[string]any{
+				"type": "string",
+			},
+			"participants": map[string]any{
+				"type": "array",
+				"items": map[string]any{
+					"type": "string",
+				},
+			},
+			"decisions": map[string]any{
+				"type": "array",
+				"items": map[string]any{
+					"type": "string",
+				},
+			},
+			"actionItems": map[string]any{
+				"type": "array",
+				"items": map[string]any{
 					"type":                 "object",
 					"additionalProperties": false,
-					"required":             []string{"summary", "participants", "decisions", "actionItems"},
+					"required": []string{
+						"owner",
+						"task",
+						"due",
+					},
 					"properties": map[string]any{
-						"summary": map[string]any{
+						"owner": map[string]any{
 							"type": "string",
 						},
-						"participants": map[string]any{
-							"type": "array",
-							"items": map[string]any{
-								"type": "string",
-							},
+						"task": map[string]any{
+							"type": "string",
 						},
-						"decisions": map[string]any{
-							"type": "array",
-							"items": map[string]any{
-								"type": "string",
-							},
-						},
-						"actionItems": map[string]any{
-							"type": "array",
-							"items": map[string]any{
-								"type":                 "object",
-								"additionalProperties": false,
-								"required": []string{
-									"owner",
-									"task",
-									"due",
-								},
-								"properties": map[string]any{
-									"owner": map[string]any{
-										"type": "string",
-									},
-									"task": map[string]any{
-										"type": "string",
-									},
-									"due": map[string]any{
-										"type": "string",
-									},
-								},
-							},
+						"due": map[string]any{
+							"type": "string",
 						},
 					},
 				},
 			},
 		},
-	}, nil
+	}
 }

@@ -37,7 +37,10 @@ func BuildApplication(cfg *config.AppConfig) (*app.Application, error) {
 		return nil, err
 	}
 
-	exporter := buildExporter(cfg)
+	exporter, err := buildExporter(cfg)
+	if err != nil {
+		return nil, err
+	}
 
 	transcriptionWorker := app.NewTranscriptionWorker(recordingRepository, transcriber, transcribeCommands, extractCommands)
 	extractionWorker := app.NewExtractionWorker(recordingRepository, extractor, extractCommands, exportCommands)
@@ -47,7 +50,7 @@ func BuildApplication(cfg *config.AppConfig) (*app.Application, error) {
 }
 
 func newRecordingRepository(cfg *config.AppConfig) *repository.RecordingRepository {
-	return repository.NewRecordingRepository(cfg.FileStoreConfig.StoragePath)
+	return repository.NewRecordingRepository(cfg.StoragePath)
 }
 
 func newUploadService(recordings app.RecordingStorer, transcribeCommands chan<- app.TranscribeCommand) *app.UploadService {
@@ -66,32 +69,62 @@ func buildTranscriber(cfg *config.AppConfig) (app.Transcriber, error) {
 
 	switch cfg.Transcriber {
 	case "openai":
-		return transcriberadapter.NewOpenAITranscriber(cfg.OpenAIConfig.APIKey), nil
+		openAIConfig, err := transcriberadapter.LoadOpenAIConfig()
+		if err != nil {
+			return nil, err
+		}
+
+		return transcriberadapter.NewOpenAITranscriber(openAIConfig.APIKey), nil
 	default:
-		return transcriberadapter.NewMockTranscriber(cfg.MockConfig.TranscriptionPath)
+		mockConfig, err := transcriberadapter.LoadMockConfig()
+		if err != nil {
+			return nil, err
+		}
+
+		return transcriberadapter.NewMockTranscriber(mockConfig.TranscriptionPath)
 	}
 }
 
 func buildExtractor(cfg *config.AppConfig) (app.Extractor, error) {
 	switch cfg.Extractor {
 	case "openai":
-		return extractoradapter.NewOpenAIExtractor(cfg.OpenAIConfig.APIKey), nil
+		openAIConfig, err := extractoradapter.LoadOpenAIConfig()
+		if err != nil {
+			return nil, err
+		}
+
+		return extractoradapter.NewOpenAIExtractor(openAIConfig.APIKey), nil
 	default:
-		return extractoradapter.NewMockExtractor(cfg.MockConfig.ExtractionPath), nil
+		mockConfig, err := extractoradapter.LoadMockConfig()
+		if err != nil {
+			return nil, err
+		}
+
+		return extractoradapter.NewMockExtractor(mockConfig.ExtractionPath), nil
 	}
 }
 
-func buildExporter(cfg *config.AppConfig) app.Exporter {
+func buildExporter(cfg *config.AppConfig) (app.Exporter, error) {
 	switch cfg.Exporter {
 	case "webhook":
-		return exporteradapter.NewWebhookExporter(cfg.WebHookConfig.ExportURL)
+		webhookConfig, err := exporteradapter.LoadWebhookConfig()
+		if err != nil {
+			return nil, err
+		}
+
+		return exporteradapter.NewWebhookExporter(webhookConfig.ExportURL), nil
 	case "googlesheets":
+		googleConfig, err := exporteradapter.LoadGoogleConfig()
+		if err != nil {
+			return nil, err
+		}
+
 		return exporteradapter.NewGoogleSheetExporter(
-			cfg.GoogleConfig.CredentialsFilePath,
-			cfg.GoogleConfig.SheetID,
-			cfg.GoogleConfig.SheetRange,
-		)
+			googleConfig.CredentialsFilePath,
+			googleConfig.SheetID,
+			googleConfig.SheetRange,
+		), nil
 	default:
-		return exporteradapter.NewMockExporter()
+		return exporteradapter.NewMockExporter(), nil
 	}
 }
