@@ -55,7 +55,7 @@ Set the exporter to webhook and point it at your endpoint (in my case I used web
 TRANSCRIBER=openai
 EXTRACTOR=openai
 EXPORTER=webhook
-OPENAI_API_KEY=<
+OPENAI_API_KEY=<YOUR_API_KEY>
 WEBHOOK_EXPORT_URL=<YOUR_EXPORT_WEBHOOK_URL>
 ```
 
