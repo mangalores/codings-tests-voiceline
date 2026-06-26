@@ -117,4 +117,4 @@ Mock adapters load deterministic responses from the assets directory. This allow
 
 ### 5. Error handling of workers
 
-Asynchronous processing cannot return errors to the initial upload request. Failed processing steps create an `error.json` artifact and are also reported in the logs. This could be later served via a status endpoint.
+Asynchronous processing cannot return errors to the initial upload request. Failed processing steps create an `error.json` artifact and are also reported in the logs. This should be later served via a status endpoint to allow polling for process updates.
