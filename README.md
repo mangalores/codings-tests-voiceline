@@ -5,23 +5,26 @@ extracts useful information into a normalized data structure and pushes to an ex
 
 ## Environment
 
-The service uses .env to load environment variables. If no .env file is present, the application falls back to default configuration using the mock adapters and the test assets located in assets/. This allows the complete processing pipeline to be executed without external dependencies or API keys.
+The service loads its configuration from environment variables.
 
-A `.env.dist` is provided as template for adding required API Keys or settings.
+If no `.env` file is present, the application falls back to its default configuration, which uses mock adapters and the test assets located in `assets/`. This allows the complete processing pipeline to be executed without external dependencies or API keys.
 
-## File Storage
-Generated artifacts are written to:
+A `.env.dist` file is provided as a template for configuring external services.
 
-```text
-storage/<recording-id>/
-    recording.mp3
-    transcription.md
-    extracted.json
-``` 
+## Configuration
+
+For local development, copy the example file:
+
+```bash
+cp .env.dist .env
+```
+
+using default env is configued with mock adapters. This should work out of the box
+
 
 ## Build
 
-Go 1.26.4 was used for implementation
+Requires Go 1.24 or newer.
 
 To build execute from the project root:
 
@@ -38,9 +41,8 @@ After build start web server:
     ./api
 ```
 
-### With Mock Adapters
+### Using the Default Mock Configuration
 
-using default env with mock adapters. Should work out of the box
 
 ```bash
 curl -X POST http://localhost:8080/recordings \
@@ -49,7 +51,7 @@ curl -X POST http://localhost:8080/recordings \
 
 ### With OpenAI Transcriber,Extractor & Webhook Export
 
-Set the exporter to webhook and point it at your endpoint (in my case I used webhook.site):
+Configure the OpenAI-based adapters and point the webhook exporter to your endpoint (e.g. webhook.site)::
 
 ```text
 TRANSCRIBER=openai
@@ -93,7 +95,17 @@ The ability to have various adapters for the different processing steps is repre
 - mock
 - webhook
 
-- googlesheet (exists as option, but implementation was not finished due to time constrains)
+- googlesheet (exists as option, but implementation was not finished due to time constraints)
+
+## File Storage
+Generated artifacts are written to:
+
+```text
+storage/<recording-id>/
+    recording.mp3
+    transcription.md
+    extracted.json
+``` 
 
 ## Design Decisions
 
