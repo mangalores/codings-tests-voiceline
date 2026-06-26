@@ -1,0 +1,7 @@
+vendor
+scratchpad
+.env
+.github
+docs
+credentials
+api
