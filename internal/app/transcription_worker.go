@@ -14,7 +14,7 @@ type TranscriptionWorker struct {
 	transcriber  Transcriber
 }
 
-func NewTranscriptionService(
+func NewTranscriptionWorker(
 	recordings RecordingTranscriptionStore,
 	transcriber Transcriber,
 	commands <-chan TranscribeCommand,

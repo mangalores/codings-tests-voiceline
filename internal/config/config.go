@@ -22,6 +22,7 @@ type AppConfig struct {
 	GoogleConfig
 }
 
+// todo: the implementation specific configs should be moved to their respective packages, and the config should be passed to the build functions of the adapters.
 type MockConfig struct {
 	TranscriptionPath string `envconfig:"TRANSCRIPTION_PATH" default:"assets/mock_transcription.md"`
 	ExtractionPath    string `envconfig:"EXTRACTION_PATH" default:"assets/mock_extraction.json"`

@@ -99,20 +99,20 @@ The ability to have various adapters for the different processing steps is repre
 
 ### 1. File-based persistence
 
-Recording artifacts are stored on the local filesystem. This avoids database setup while keeping the processing pipeline observable. In production, object storage and a database-backed metadata store would be used.
+Recording artifacts are stored on the local filesystem. This avoids database setup while keeping the processing pipeline observable. In production, object storage and a database-backed metadata store would be a better fit.
 
 ### 2. In-memory channels
 
-Background workers communicate through Go channels to model asynchronous processing. In production, durable queues (e.g. SQS, Pub/Sub, RabbitMQ) would provide persistence, retries and recovery. This was chosen to keep the API response fast given delays in actual transcription and extraction calls.
+Background workers communicate through Go channels to model asynchronous processing. In production, durable queues such as SQS, Pub/Sub, or RabbitMQ would provide persistence, retries, and recovery. This choice keeps the API responsive while transcription and extraction are in progress. The tradeoff is limited throughput in this proof of concept.
 
 ### 3. Adapter-based integrations
 
-Speech-to-text, extraction and export are abstracted behind interfaces. Mock implementations provide deterministic behaviour, while real adapters (OpenAI, Webhook) can be enabled through configuration.
+Speech-to-text, extraction, and export are abstracted behind interfaces. Mock implementations provide deterministic behaviour, while real adapters such as OpenAI and Webhook can be enabled through configuration.
 
 ### 4. Mock fixtures
 
-Mock adapters load deterministic responses from the assets directory. This allows the application flow to be tested without external dependencies or API keys.
+Mock adapters load deterministic responses from the assets directory. This allows the application flow to be exercised without external dependencies or API keys.
 
 ### 5. Error handling of workers
 
-Asynchronous processing cannot return errors to the initial upload request. Failed processing steps create an error.json artifact and will report error in logging output
+Asynchronous processing cannot return errors to the initial upload request. Failed processing steps create an `error.json` artifact and are also reported in the logs.

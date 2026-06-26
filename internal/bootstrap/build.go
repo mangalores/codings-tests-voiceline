@@ -14,13 +14,13 @@ import (
 	"github.com/mangalores/case-studies-voiceline/internal/repository"
 )
 
-const channelSize = 10
+const channelSize = 100
 
 func BuildApplication(cfg *config.AppConfig) (*app.Application, error) {
 	recordingRepository := newRecordingRepository(cfg)
-	transcribeCommands := newTranscribeCommands()
-	extractCommands := newExtractCommands()
-	exportCommands := newExportCommands()
+	transcribeCommands := make(chan app.TranscribeCommand, channelSize)
+	extractCommands := make(chan app.ExtractCommand, channelSize)
+	exportCommands := make(chan app.ExportCommand, channelSize)
 
 	uploader := newUploadService(recordingRepository, transcribeCommands)
 	router := apphttp.NewRouter(uploader)
@@ -39,7 +39,7 @@ func BuildApplication(cfg *config.AppConfig) (*app.Application, error) {
 
 	exporter := buildExporter(cfg)
 
-	transcriptionWorker := app.NewTranscriptionService(recordingRepository, transcriber, transcribeCommands, extractCommands)
+	transcriptionWorker := app.NewTranscriptionWorker(recordingRepository, transcriber, transcribeCommands, extractCommands)
 	extractionWorker := app.NewExtractionWorker(recordingRepository, extractor, extractCommands, exportCommands)
 	exportWorker := app.NewExportWorker(recordingRepository, exporter, exportCommands)
 
@@ -48,18 +48,6 @@ func BuildApplication(cfg *config.AppConfig) (*app.Application, error) {
 
 func newRecordingRepository(cfg *config.AppConfig) *repository.RecordingRepository {
 	return repository.NewRecordingRepository(cfg.FileStoreConfig.StoragePath)
-}
-
-func newTranscribeCommands() chan app.TranscribeCommand {
-	return make(chan app.TranscribeCommand, channelSize)
-}
-
-func newExtractCommands() chan app.ExtractCommand {
-	return make(chan app.ExtractCommand, channelSize)
-}
-
-func newExportCommands() chan app.ExportCommand {
-	return make(chan app.ExportCommand, channelSize)
 }
 
 func newUploadService(recordings app.RecordingStorer, transcribeCommands chan<- app.TranscribeCommand) *app.UploadService {

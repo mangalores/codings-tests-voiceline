@@ -125,7 +125,7 @@ func buildAnalysisRequest(transcript string) (map[string]any, error) {
 				"schema": map[string]any{
 					"type":                 "object",
 					"additionalProperties": false,
-					"required":             []string{"summary", "participants", "decisions", "action_items"},
+					"required":             []string{"summary", "participants", "decisions", "actionItems"},
 					"properties": map[string]any{
 						"summary": map[string]any{
 							"type": "string",
@@ -142,7 +142,7 @@ func buildAnalysisRequest(transcript string) (map[string]any, error) {
 								"type": "string",
 							},
 						},
-						"action_items": map[string]any{
+						"actionItems": map[string]any{
 							"type": "array",
 							"items": map[string]any{
 								"type":                 "object",
