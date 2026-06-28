@@ -4,23 +4,52 @@ import (
 	"context"
 
 	"log/slog"
+
+	"github.com/mangalores/case-studies-voiceline/internal/message"
 )
 
-type ExportWorker struct {
-	commands   <-chan ExportCommand
+type ExportService struct {
 	recordings RecordingExportStore
 	exporter   Exporter
 }
 
-func NewExportWorker(
+func NewExportService(
 	recordings RecordingExportStore,
 	exporter Exporter,
-	commands <-chan ExportCommand,
-) *ExportWorker {
-	return &ExportWorker{
+) *ExportService {
+	return &ExportService{
 		recordings: recordings,
 		exporter:   exporter,
-		commands:   commands,
+	}
+}
+
+func (w *ExportService) Handle(ctx context.Context, command message.ExportCommand) error {
+	data, err := w.recordings.GetExtraction(command.ID)
+	if err != nil {
+		return err
+	}
+
+	if err := w.exporter.Export(ctx, data); err != nil {
+		return err
+	}
+
+	slog.Info("SUCCESS export recording", "worker", "ExportWorker", "id", command.ID, "status", "success")
+
+	return nil
+}
+
+type ExportWorker struct {
+	commands <-chan message.ExportCommand
+	service  *ExportService
+}
+
+func NewExportWorker(
+	commands <-chan message.ExportCommand,
+	service *ExportService,
+) *ExportWorker {
+	return &ExportWorker{
+		commands: commands,
+		service:  service,
 	}
 }
 
@@ -34,27 +63,12 @@ func (w *ExportWorker) Run(ctx context.Context) {
 				return
 			}
 
-			if err := w.handleCommand(ctx, command); err != nil {
+			if err := w.service.Handle(ctx, command); err != nil {
 				slog.Error("FAILED export recording", "worker", "ExportWorker", "id", command.ID, "error", err)
-				if saveErr := w.recordings.SaveError(command.ID, "ExportWorker", err.Error()); saveErr != nil {
+				if saveErr := w.service.recordings.SaveError(command.ID, "ExportWorker", err.Error()); saveErr != nil {
 					slog.Error("FAILED persist worker error", "worker", "ExportWorker", "id", command.ID, "error", saveErr)
 				}
 			}
 		}
 	}
-}
-
-func (w *ExportWorker) handleCommand(ctx context.Context, command ExportCommand) error {
-	data, err := w.recordings.GetExtraction(command.ID)
-	if err != nil {
-		return err
-	}
-
-	if err := w.exporter.Export(ctx, data); err != nil {
-		return err
-	}
-
-	slog.Info("SUCCESS export recording", "worker", "ExportWorker", "id", command.ID, "status", "success")
-
-	return nil
 }

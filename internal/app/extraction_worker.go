@@ -5,50 +5,29 @@ import (
 	"encoding/json"
 
 	"log/slog"
+
+	"github.com/mangalores/case-studies-voiceline/internal/message"
 )
 
-type ExtractionWorker struct {
-	commands     <-chan ExtractCommand
-	recordings   RecordingExtractionStore
-	extractor    Extractor
-	nextCommands chan<- ExportCommand
+type ExtractionService struct {
+	recordings      RecordingExtractionStore
+	extractor       Extractor
+	exportPublisher ExportPublisher
 }
 
-func NewExtractionWorker(
+func NewExtractionService(
 	recordings RecordingExtractionStore,
 	extractor Extractor,
-	commands <-chan ExtractCommand,
-	nextCommands chan<- ExportCommand,
-) *ExtractionWorker {
-	return &ExtractionWorker{
-		recordings:   recordings,
-		extractor:    extractor,
-		commands:     commands,
-		nextCommands: nextCommands,
+	exportPublisher ExportPublisher,
+) *ExtractionService {
+	return &ExtractionService{
+		recordings:      recordings,
+		extractor:       extractor,
+		exportPublisher: exportPublisher,
 	}
 }
 
-func (w *ExtractionWorker) Run(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case command, ok := <-w.commands:
-			if !ok {
-				return
-			}
-
-			if err := w.handleCommand(ctx, command); err != nil {
-				slog.Error("extract recording", "worker", "ExtractionWorker", "id", command.ID, "error", err)
-				if saveErr := w.recordings.SaveError(command.ID, "ExtractionWorker", err.Error()); saveErr != nil {
-					slog.Error("persist worker error", "worker", "ExtractionWorker", "id", command.ID, "error", saveErr)
-				}
-			}
-		}
-	}
-}
-
-func (w *ExtractionWorker) handleCommand(ctx context.Context, command ExtractCommand) error {
+func (w *ExtractionService) Handle(ctx context.Context, command message.ExtractCommand) error {
 	transcription, err := w.recordings.GetTranscription(command.ID)
 	if err != nil {
 		return err
@@ -68,11 +47,48 @@ func (w *ExtractionWorker) handleCommand(ctx context.Context, command ExtractCom
 		return err
 	}
 
-	if w.nextCommands != nil {
-		w.nextCommands <- ExportCommand{ID: command.ID}
+	if w.exportPublisher != nil {
+		if err := w.exportPublisher.Publish(message.ExportCommand{ID: command.ID}); err != nil {
+			return err
+		}
 	}
 
 	slog.Info("extract recording", "worker", "ExtractionWorker", "id", command.ID, "status", "success")
 
 	return nil
+}
+
+type ExtractionWorker struct {
+	commands <-chan message.ExtractCommand
+	service  *ExtractionService
+}
+
+func NewExtractionWorker(
+	commands <-chan message.ExtractCommand,
+	service *ExtractionService,
+) *ExtractionWorker {
+	return &ExtractionWorker{
+		commands: commands,
+		service:  service,
+	}
+}
+
+func (w *ExtractionWorker) Run(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case command, ok := <-w.commands:
+			if !ok {
+				return
+			}
+
+			if err := w.service.Handle(ctx, command); err != nil {
+				slog.Error("extract recording", "worker", "ExtractionWorker", "id", command.ID, "error", err)
+				if saveErr := w.service.recordings.SaveError(command.ID, "ExtractionWorker", err.Error()); saveErr != nil {
+					slog.Error("persist worker error", "worker", "ExtractionWorker", "id", command.ID, "error", saveErr)
+				}
+			}
+		}
+	}
 }

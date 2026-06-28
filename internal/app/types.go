@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"io"
+
+	"github.com/mangalores/case-studies-voiceline/internal/message"
 )
 
 type ExtractedData struct {
@@ -18,16 +20,16 @@ type ActionItems struct {
 	Due   string `json:"due,omitempty"`
 }
 
-type TranscribeCommand struct {
-	ID string
+type TranscribePublisher interface {
+	Publish(command message.TranscribeCommand) error
 }
 
-type ExtractCommand struct {
-	ID string
+type ExtractPublisher interface {
+	Publish(command message.ExtractCommand) error
 }
 
-type ExportCommand struct {
-	ID string
+type ExportPublisher interface {
+	Publish(command message.ExportCommand) error
 }
 
 type RecordingStorer interface {

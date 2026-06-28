@@ -11,6 +11,7 @@ import (
 	"github.com/mangalores/case-studies-voiceline/internal/app"
 	"github.com/mangalores/case-studies-voiceline/internal/config"
 	apphttp "github.com/mangalores/case-studies-voiceline/internal/http"
+	"github.com/mangalores/case-studies-voiceline/internal/message"
 	"github.com/mangalores/case-studies-voiceline/internal/repository"
 )
 
@@ -18,11 +19,14 @@ const channelSize = 100
 
 func BuildApplication(cfg *config.AppConfig) (*app.Application, error) {
 	recordingRepository := newRecordingRepository(cfg)
-	transcribeCommands := make(chan app.TranscribeCommand, channelSize)
-	extractCommands := make(chan app.ExtractCommand, channelSize)
-	exportCommands := make(chan app.ExportCommand, channelSize)
+	transcribeCommands := make(chan message.TranscribeCommand, channelSize)
+	extractCommands := make(chan message.ExtractCommand, channelSize)
+	exportCommands := make(chan message.ExportCommand, channelSize)
+	transcribePublisher := message.NewChannelCommandPublisher(transcribeCommands)
+	extractPublisher := message.NewChannelCommandPublisher(extractCommands)
+	exportPublisher := message.NewChannelCommandPublisher(exportCommands)
 
-	uploader := newUploadService(recordingRepository, transcribeCommands)
+	uploader := newUploadService(recordingRepository, transcribePublisher)
 	router := apphttp.NewRouter(uploader)
 
 	server := newServer(cfg, router)
@@ -42,9 +46,13 @@ func BuildApplication(cfg *config.AppConfig) (*app.Application, error) {
 		return nil, err
 	}
 
-	transcriptionWorker := app.NewTranscriptionWorker(recordingRepository, transcriber, transcribeCommands, extractCommands)
-	extractionWorker := app.NewExtractionWorker(recordingRepository, extractor, extractCommands, exportCommands)
-	exportWorker := app.NewExportWorker(recordingRepository, exporter, exportCommands)
+	transcriptionService := app.NewTranscriptionService(recordingRepository, transcriber, extractPublisher)
+	extractionService := app.NewExtractionService(recordingRepository, extractor, exportPublisher)
+	exportService := app.NewExportService(recordingRepository, exporter)
+
+	transcriptionWorker := app.NewTranscriptionWorker(transcribeCommands, transcriptionService)
+	extractionWorker := app.NewExtractionWorker(extractCommands, extractionService)
+	exportWorker := app.NewExportWorker(exportCommands, exportService)
 
 	return app.NewApplication(server, transcriptionWorker, extractionWorker, exportWorker), nil
 }
@@ -53,7 +61,7 @@ func newRecordingRepository(cfg *config.AppConfig) *repository.RecordingReposito
 	return repository.NewRecordingRepository(cfg.StoragePath)
 }
 
-func newUploadService(recordings app.RecordingStorer, transcribeCommands chan<- app.TranscribeCommand) *app.UploadService {
+func newUploadService(recordings app.RecordingStorer, transcribeCommands app.TranscribePublisher) *app.UploadService {
 	return app.NewUploadService(recordings, transcribeCommands)
 }
 

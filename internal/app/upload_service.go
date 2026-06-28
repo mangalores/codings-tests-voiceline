@@ -1,16 +1,22 @@
 package app
 
+import (
+	"fmt"
+
+	"github.com/mangalores/case-studies-voiceline/internal/message"
+)
+
 type RecordingStore interface {
 	StoreRecording(file []byte) (string, error)
 }
 
 type UploadService struct {
-	recordings         RecordingStorer
-	transcribeCommands chan<- TranscribeCommand
+	recordings          RecordingStorer
+	transcribePublisher TranscribePublisher
 }
 
-func NewUploadService(recordings RecordingStorer, transcribeCommands chan<- TranscribeCommand) *UploadService {
-	return &UploadService{recordings: recordings, transcribeCommands: transcribeCommands}
+func NewUploadService(recordings RecordingStorer, transcribePublisher TranscribePublisher) *UploadService {
+	return &UploadService{recordings: recordings, transcribePublisher: transcribePublisher}
 }
 
 func (s *UploadService) UploadRecording(file []byte) (string, error) {
@@ -19,8 +25,10 @@ func (s *UploadService) UploadRecording(file []byte) (string, error) {
 		return "", err
 	}
 
-	if s.transcribeCommands != nil {
-		s.transcribeCommands <- TranscribeCommand{ID: id}
+	if s.transcribePublisher != nil {
+		if err := s.transcribePublisher.Publish(message.TranscribeCommand{ID: id}); err != nil {
+			return "", fmt.Errorf("publish transcribe command: %w", err)
+		}
 	}
 
 	return id, nil
